@@ -19,15 +19,21 @@ static struct blkcg_policy ssg_blkcg_policy;
 
 
 
-#define CPD_TO_SSG_BLKCG(_cpd) \
-	container_of_safe((_cpd), struct ssg_blkcg, cpd)
-#define BLKCG_TO_SSG_BLKCG(_blkcg) \
-	CPD_TO_SSG_BLKCG(blkcg_to_cpd((_blkcg), &ssg_blkcg_policy))
+static inline struct ssg_blkcg *cpd_to_ssg_blkcg(struct blkcg_policy_data *cpd)
+{
+	return cpd ? container_of(cpd, struct ssg_blkcg, cpd) : NULL;
+}
 
-#define PD_TO_SSG_BLKG(_pd) \
-	container_of_safe((_pd), struct ssg_blkg, pd)
+static inline struct ssg_blkg *pd_to_ssg_blkg(struct blkg_policy_data *pd)
+{
+	return pd ? container_of(pd, struct ssg_blkg, pd) : NULL;
+}
+
+#define BLKCG_TO_SSG_BLKCG(_blkcg) \
+	cpd_to_ssg_blkcg(blkcg_to_cpd((_blkcg), &ssg_blkcg_policy))
+
 #define BLKG_TO_SSG_BLKG(_blkg) \
-	PD_TO_SSG_BLKG(blkg_to_pd((_blkg), &ssg_blkcg_policy))
+	pd_to_ssg_blkg(blkg_to_pd((_blkg), &ssg_blkcg_policy))
 
 #define CSS_TO_SSG_BLKCG(css) BLKCG_TO_SSG_BLKCG(css_to_blkcg(css))
 
@@ -46,7 +52,7 @@ static struct blkcg_policy_data *ssg_blkcg_cpd_alloc(gfp_t gfp)
 
 static void ssg_blkcg_cpd_init(struct blkcg_policy_data *cpd)
 {
-	struct ssg_blkcg *ssg_blkcg = CPD_TO_SSG_BLKCG(cpd);
+	struct ssg_blkcg *ssg_blkcg = cpd_to_ssg_blkcg(cpd);
 
 	if (IS_ERR_OR_NULL(ssg_blkcg))
 		return;
@@ -56,7 +62,7 @@ static void ssg_blkcg_cpd_init(struct blkcg_policy_data *cpd)
 
 static void ssg_blkcg_cpd_free(struct blkcg_policy_data *cpd)
 {
-	struct ssg_blkcg *ssg_blkcg = CPD_TO_SSG_BLKCG(cpd);
+	struct ssg_blkcg *ssg_blkcg = cpd_to_ssg_blkcg(cpd);
 
 	if (IS_ERR_OR_NULL(ssg_blkcg))
 		return;
@@ -101,7 +107,7 @@ static void ssg_blkcg_pd_init(struct blkg_policy_data *pd)
 	struct blk_mq_hw_ctx *hctx;
 	unsigned long i;
 
-	ssg_blkg = PD_TO_SSG_BLKG(pd);
+	ssg_blkg = pd_to_ssg_blkg(pd);
 	if (IS_ERR_OR_NULL(ssg_blkg))
 		return;
 
@@ -117,7 +123,7 @@ static void ssg_blkcg_pd_init(struct blkg_policy_data *pd)
 
 static void ssg_blkcg_pd_free(struct blkg_policy_data *pd)
 {
-	struct ssg_blkg *ssg_blkg = PD_TO_SSG_BLKG(pd);
+	struct ssg_blkg *ssg_blkg = pd_to_ssg_blkg(pd);
 
 	if (IS_ERR_OR_NULL(ssg_blkg))
 		return;
